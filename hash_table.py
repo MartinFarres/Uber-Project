@@ -1,5 +1,4 @@
 class HashTable:
-
     """
     Hash Table where the collisions are handled with chaining
     """
