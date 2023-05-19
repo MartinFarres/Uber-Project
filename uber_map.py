@@ -19,8 +19,11 @@ class Map:
         # eges is a list containing all the pairs of vertices and it's distance [[v0, v2, d0], [v4, v7, d1], ..., [v8, vn, dn]]
         self.dict = {}
 
+        self.vertices_count = 0
+        self.edges_count = 0
+
         for vert in vertices:
-            self.dict[vert] = []
+            self.insert_vertex(vert)
 
         for (v0, v1, distance) in edges:
             self.insert_directed(v0, v1, distance)
@@ -31,8 +34,9 @@ class Map:
             print(f"Warning: trying tho add an already existing edge ({v0}, {v1})")
             return
 
+        self.edges_count += 1
         if v0 not in self.dict:
-            self.dict[v0] = []
+            self.insert_vertex(v0)
 
         self.dict[v0].append(AdyNode(v1, distance))
 
@@ -40,6 +44,16 @@ class Map:
         self.insert_directed(v0, v1, distance)
         self.insert_directed(v1, v0, distance)
 
+    def insert_vertex(self, v):
+        self.dict[v] = []
+        self.vertices_count += 1
+
+    def access_adyacent(self, v):
+
+        if v not in self.dict:
+            raise Exception(f"Trying to access inexistent node {v}")
+
+        return self.dict[v]
 
     def exists_street(self, v0, v1) -> bool:
 
