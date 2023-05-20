@@ -139,7 +139,7 @@ class Heap:
 
 
 if __name__ == "__main__":
-
+    # Simple test
 
     weights = [2, 3, 9, 6, 1, -1]
     heap = Heap(len(weights))

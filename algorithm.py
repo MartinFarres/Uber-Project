@@ -1,21 +1,9 @@
 from min_heap import Heap
-from uber_map import load_map, Map
+from typing import List, Dict
+from dynamic_location import DynamicLoc
 
 
-def weight_insert(graph, node, ady_node, weight):
-    
-    # Adds both nodes to the graph
-    if node not in graph:
-        graph[node] = []
-
-    if ady_node not in graph:
-        graph[ady_node] = []
-
-    # But the directed edge is node -> ady_node
-    graph[node].append((ady_node, weight))
-
-
-class Node:
+class DijkstraNode:
     def __init__(self, key) -> None:
         self.key = key
         self.d = float("inf")
@@ -38,19 +26,20 @@ class DijkstraOutput:
         self.weight = weight
 
 
-def dijkstra(map, start_key, find_func, find_count_target):
-
-    edges_count = sum(len(graph[node_key]) for node_key in graph.keys())
-
-    # Stores the Node instances
+def dijkstra(map, start_key, end_key) -> DijkstraOutput:
+    """
+    Returns the shortest path between start and end it's weight
+    Note that the return list is [end, ..., start] is reversed
+    """
+    # Stores the DijkstraNode instances
     nodes = {}          
 
     # Heap used to get the min distance item
-    heap = Heap(edges_count)
+    heap = Heap(map.vertices_count)
 
     # Initializes heap and nodes
-    for node_key in graph.keys():
-        nodes[node_key] = Node(node_key)
+    for node_key in map.vertices:
+        nodes[node_key] = DijkstraNode(node_key)
         heap.add(node_key, float("inf"))
 
     visited_keys = set()
@@ -59,8 +48,6 @@ def dijkstra(map, start_key, find_func, find_count_target):
     # this way the heap pops the start first
     heap.update_key(start_key, 0)
     nodes[start_key].d = 0
-    find_count = 0
-    ends = []
     while len(heap):
 
         (node_key, d) = heap.pop()
@@ -70,75 +57,89 @@ def dijkstra(map, start_key, find_func, find_count_target):
         # Gets the node, containing d, and parent data
         node = nodes[node_key]
 
-        # Tests if node id valid
-        parent_key = node.parent.key if node.parent is not None else None
-        if find_func(node_key, parent_key):
-            find_count += 1
-            ends.append(node)
-            if find_count == find_count_target:
-                break
+        # Tests if the end is reached
+        if node_key == end_key:
+            break
 
-        for ady, weight in graph[node_key]:
-
-            if ady not in visited_keys:
-
-                ady_node = nodes[ady]
+        for (ady_key, properties) in map.adyacent_generator(node_key):
+            
+            if ady_key not in visited_keys:
+                
+                # This node contains the Dijkstra requiered attributes (.d)
+                ady_dijkstra_node = nodes[ady_key]
 
                 # Relax the adyacent
-                modified = relax(node, ady_node, weight)
+                modified = relax(node, ady_dijkstra_node, properties.distance)
 
                 # Only if the relax call modified the value
                 if modified:
-                    heap.update_key(ady, ady_node.d)
+                    heap.update_key(ady_key, ady_dijkstra_node.d)
 
-    results = []
-    for end_node in ends:
+    # Traverses the path backwards, using the parent attribute 
+    end_node = nodes[end_key]
+    path = []
+
+    if end_node.parent is None:
+        return None
+
+    parent = end_node
+    while parent is not None:
+        path.append(parent.key)
+        parent = parent.parent
+
+    return DijkstraOutput(path, end_node.d)
+
+
+class FindCarsOutput:
+    def __init__(self, car, path, price) -> None:
+        self.car_name = car
+        self.path = path
+        self.price = price
+
+
+def find_nearest_cars(map, cars: Dict[str, DynamicLoc], person: DynamicLoc, max_cars_count, price_function) -> List[FindCarsOutput]:
+
+    """
+    Returns a list of FindCarsOutput in order, where the first element is the nearest and the last the furthest
+    """
+
+    # Used to sort the cars based on the final price
+    heap = Heap(len(cars))
+
+    # Contains path for each result
+    results = dict()
+
+    for car in cars.values():
         
-        # Disconnected
-        if end_node.parent is None:
+        # Picks the second node of the directed edge (u, v)
+        start_node = car.direction.edge2
+
+        # The car should be able to access where the person is,
+        # that's why the end node is the firt node
+        end_node = person.direction.edge1
+
+        # If we access this nodes, we are missing the following distances
+        missed_distance = car.direction.d2 + person.direction.d1
+
+        # Now used dijkstra
+        dijkstra_result = dijkstra(map, start_node, end_node)
+
+        # Car unable to get to person
+        if dijkstra_result is None:
             continue
 
-        # Traverses the path backwards, using the parent attribute 
-        path = []
-        parent = end_node
-        while parent is not None:
-            path.append(parent.key)
-            parent = parent.parent
+        total_distance = missed_distance + dijkstra_result.weight
+        results[car.name] = dijkstra_result.path 
+        heap.add(car.name, total_distance)
 
-        results.append(DijkstraOutput(path, end_node.d))
+    # Sorts with heap sort
+    added_cars_count = 0
+    sorted_cars = []
+    while added_cars_count < max_cars_count and len(heap) > 0:
 
-    return results
+        (car_name, distance) = heap.pop()
+        car_path = results[car_name]
+        price = price_function(cars[car_name], distance)
+        sorted_cars.append(FindCarsOutput(car_name, car_path, price))
 
-if __name__ == "__main__":
-
-    map = Map([], [])
-    graph = {}
-
-    # Connected group
-    map.insert_directed("s", "t", 10)
-    map.insert_directed("s", "y", 5)
-    map.insert_directed("t", "y", 2)
-    map.insert_directed("t", "x", 1)
-    map.insert_directed("y", "t", 3)
-    map.insert_directed("y", "z", 2)
-    map.insert_directed("y", "x", 9)
-    map.insert_directed("z", "s", 7)
-    map.insert_directed("z", "x", 6)
-    map.insert_directed("x", "z", 4)
-
-    # unconnected group
-    map.insert_directed("m", "n", 4)
-
-    dijkstra_results1 = dijkstra(map, "s", (lambda x, y : x == "x"), 1)
-
-    if len(dijkstra_results1):
-        print("Path from 's' to 'x':", dijkstra_results1[0].path, dijkstra_results1[0].weight)
-    else:
-        print("Unable to get to 'x' from 's'")
-
-    dijkstra_results2 = dijkstra(map, "s", (lambda x, y : x == "n"), 1)
-
-    if len(dijkstra_results2):
-        print("Path from 's' to 'n':", dijkstra_results2[0].path, dijkstra_results2[0].weight)
-    else:
-        print("Unable to get to 'n' from 's'")
+    return sorted_cars
