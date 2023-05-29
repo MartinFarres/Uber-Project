@@ -10,7 +10,7 @@ import file_manager as fm
 """
 Program data
 """
-data = fm.initializationData()
+data = fm.initialization_data()
 static_loc_HT = data.static_loc_HT
 cars_HT = data.cars_HT
 cars_dir_HT = data.cars_dir_HT
