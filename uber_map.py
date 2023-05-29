@@ -5,15 +5,18 @@ class AdyNode:
     """
     Stored in the adjacency list, represents an adyacent node in the graph
     """
+
     def __init__(self, key, distance) -> None:
         self.key = key
         self.distance = distance
+
 
 class Map:
 
     """
     Map is a Directed Graph, but with certain helper functions specific to UberMap
     """
+
     def __init__(self, vertices: list, edges: list):
         # Vertices is a list containing all the vertices as [v0, v1, v2, ..., vn]
         # eges is a list containing all the pairs of vertices and it's distance [[v0, v2, d0], [v4, v7, d1], ..., [v8, vn, dn]]
@@ -28,7 +31,8 @@ class Map:
     def insert_directed(self, v0, v1, distance):
         # Insertion in directed graph
         if self.exists_street(v0, v1):
-            print(f"Warning: trying tho add an already existing edge ({v0}, {v1})")
+            print(
+                f"Warning: trying tho add an already existing edge ({v0}, {v1})")
             return
 
         if v0 not in self.dict:
@@ -40,18 +44,17 @@ class Map:
         self.insert_directed(v0, v1, distance)
         self.insert_directed(v1, v0, distance)
 
-
     def exists_street(self, v0, v1) -> bool:
 
         if v0 not in self.dict:
             return False
-        
+
         for ady_node in self.dict[v0]:
             if ady_node.key == v1:
                 return True
-        
+
         return False
-    
+
 
 def load_map(path):
     """
@@ -60,24 +63,24 @@ def load_map(path):
     2) If the map isn't serialized, creates one for the first time
     """
     if os.path.exists(path):
-        # Loads the map with pickle
+
         pass
 
     else:
         # Hardcoded Bidirected Grid 4x4 example. Where all north, south, west and east nodes are connected
-        # 0  1  2  3 
+        # 0  1  2  3
         # 4  5  6  7
         # 8  9  10 11
         # 12 13 14 15
 
         size = 4
         street_length = 1
-        V = list(range(size * size)) # 100 vertices
+        V = list(range(size * size))  # 100 vertices
         map = Map(V, [])
         for y in range(size):
 
-            for x in range(size):                        
-                
+            for x in range(size):
+
                 # Current vertex
                 v = y * size + x
 
