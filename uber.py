@@ -1,83 +1,79 @@
-from hash_table import HashTable
-from hash_table import OpenHashTable
-from uber_map import Map, load_map
-from direction import Direction
-from dynamic_location import DynamicLoc
-from static_location import StaticLoc
+import sys
 import file_manager as fm
+from core_functions import create_map_core, load_fix_element_core, load_movil_element_core
 
 
-"""
-Program data
-"""
-data = fm.initialization_data()
-static_loc_HT = data.static_loc_HT
-cars_HT = data.cars_HT
-cars_dir_HT = data.cars_dir_HT
-people_HT = data.people_HT
-main_map = data.main_map
+def load_fix_element(data, fix_element_name, serialized_direction):
+    # Deserializes the cmd argument and calls load_fix_element_core
+    direction = deserialize_direction(serialized_direction)
+    success = load_fix_element_core(
+        fix_element_name, direction, data.static_loc_HT)
+
+    if not success:
+        print(f"A fix element named {fix_element_name} already exists")
+
+    print("Test input data: ", fix_element_name, direction)
 
 
-"""
-LOADING FUNCTIONS 
-|----------------------------------------------------------|
-"""
+def load_movil_element(data, movil_name, serialized_direction):
+    direction = deserialize_direction(serialized_direction)
+    price = int(args[2])
+    success = load_movil_element_core(
+        movil_name, direction, price, data.cars_HT, data.people_HT)
+
+    if not success:
+        print(f"A Movil element named {movil_name} already exists")
+
+    print("Test input data: ", movil_name, direction)
 
 
-def create_map(path):
-    if main_map != None:
-        inp = ""
-        while inp != "Y" and inp != "N":
-            inp = input(
-                "There's already a saved Map. Are you sure you want to overwrite it? (Y/N)")
-        if inp == "N":
-            return
-    mapVar = fm.read_map_var()
-    main_map = Map(mapVar[0], mapVar[1])
+def create_trip(data, person_name, second_value):
+
+    # Contains a direction
+    if second_value[0] == '<':
+        direction = deserialize_direction(second_value)
+        print(person_name, direction)
+
+    else:
+        static_loc_name = second_value
+        print(person_name, static_loc_name)
 
 
-def load_fix_element(name, direction) -> bool:
-    if name in static_loc_HT:
-        return False
-
-    static_loc_HT[name] = StaticLoc(name, direction)
-    return True
+def create_map(data, local_path):
+    data.main_map = create_map_core(local_path)
+    print("map created successfully")
 
 
-def load_movil_element(name, direction, price) -> bool:
-    """
-    """
-    if name[0].upper() == "C":
-        if name in cars_HT:
-            return False
-        cars_HT[name] = DynamicLoc(name, direction, price)
+# Helping Functions ----------------------------------------------------------------------------------
 
-    if name[0].upper() == "P":
-        if name in people_HT:
-            return False
-        people_HT[name] = DynamicLoc(name, direction, price)
-    return True
+def deserialize_direction(serialized_dir: str):
+    # Serialized direction is a string in the following format
+    # "<e8,10> <e10,40>"
+    # This function transforms it to a Direction object instance
+
+    def _deserialize_side(side: str):
+        # Sample input: "<e8,10>"
+        side = side[1:-1]                              # Removes '<>'
+        edge_name, edge_distance_str = side.split(
+            ',')  # Separates the edge and the distance
+        # Returns the edge name and the integer distance
+        return edge_name, int(edge_distance_str)
+
+    left_side, right_side = serialized_dir.split(' ')
+
+    (edge1, edge1_distance) = _deserialize_side(left_side)
+    (edge2, edge2_distance) = _deserialize_side(right_side)
+
+    # TODO - Should return direction
+    return edge1, edge1_distance, edge2, edge2_distance
 
 
-"""
-TESTING  
-|----------------------------------------------------------|
-"""
+if __name__ == '__main__':
+    data = fm.initialization_data()
 
-if __name__ == "__main__":
-    main_map = load_map("map_serialization.txt")
+    args = sys.argv
+    func_name = args[1][1:]
 
-    # Car loading test - The list contains the arguments to load_movil_element
-    cars = [
-        ("C1", Direction(10, 0.3, 11, 0.7), 1),
-        ("C2", Direction(12, 0.3, 13, 0.7), 1),
-        ("C3", Direction(0, 0.3, 1, 0.7), 1),
-        ("C4", Direction(6, 0.3, 7, 0.7), 1)
-    ]
+    globals()[func_name](data, *sys.argv[2:])
 
-    for car_args in cars:
-        # (*car_args) Python argument unpacking
-        sucess = load_movil_element(*car_args)
-
-        if not sucess:
-            print(f"Unable to load car named {car_args[0]}, already added")
+    fm.save(data)
