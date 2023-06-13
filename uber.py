@@ -1,6 +1,7 @@
 import sys
 import file_manager as fm
 from core_functions import create_map_core, load_fix_element_core, load_movil_element_core
+from direction import Direction
 
 
 def load_fix_element(data, fix_element_name, serialized_direction):
@@ -11,20 +12,19 @@ def load_fix_element(data, fix_element_name, serialized_direction):
 
     if not success:
         print(f"A fix element named {fix_element_name} already exists")
+    print(data.static_loc_HT)
 
-    print("Test input data: ", fix_element_name, direction)
 
-
-def load_movil_element(data, movil_name, serialized_direction):
+def load_movil_element(data, movil_name, serialized_direction, price):
     direction = deserialize_direction(serialized_direction)
-    price = int(args[2])
     success = load_movil_element_core(
         movil_name, direction, price, data.cars_HT, data.people_HT)
 
     if not success:
         print(f"A Movil element named {movil_name} already exists")
 
-    print("Test input data: ", movil_name, direction)
+    print(data.people_HT)
+    print(data.cars_HT)
 
 
 def create_trip(data, person_name, second_value):
@@ -64,16 +64,15 @@ def deserialize_direction(serialized_dir: str):
     (edge1, edge1_distance) = _deserialize_side(left_side)
     (edge2, edge2_distance) = _deserialize_side(right_side)
 
-    # TODO - Should return direction
-    return edge1, edge1_distance, edge2, edge2_distance
+    return Direction(edge1, edge1_distance, edge2, edge2_distance)
 
 
 if __name__ == '__main__':
     data = fm.initialization_data()
-
+    print(data.main_map)
     args = sys.argv
     func_name = args[1][1:]
 
     globals()[func_name](data, *sys.argv[2:])
 
-    fm.save(data)
+    fm.saves_data(data)

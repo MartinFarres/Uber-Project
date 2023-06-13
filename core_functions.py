@@ -1,6 +1,4 @@
-from hash_table import HashTable
-from hash_table import OpenHashTable
-from uber_map import Map, load_map
+from uber_map import Map
 from direction import Direction
 from dynamic_location import DynamicLoc
 from static_location import StaticLoc

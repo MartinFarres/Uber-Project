@@ -34,7 +34,6 @@ def read_map_var(path: str):
 # Creates file or overwrites data and serializes the Data Object
 def saves_data(data):
     dir = os.path.abspath(os.getcwd()) + "\saveData.txt"
-    print(dir)
     file = open(dir, 'bw')
     pickle.dump(data, file)
     file.close()

@@ -6,6 +6,8 @@ class AdyProperties:
     def __init__(self, distance) -> None:
         self.distance = distance
 
+    def __repr__(self) -> str:
+        return str(self.distance)
 
 class Map:
 
@@ -24,6 +26,13 @@ class Map:
 
         for (v0, v1, distance) in edges:
             self.insert_directed(v0, v1, distance)
+
+    def precalculate_distances(self):
+        pass
+
+
+    def __repr__(self) -> str:
+        return f"Map: \n {self.dict}"
 
     @property
     def vertices_count(self):
