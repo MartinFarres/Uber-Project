@@ -1,14 +1,14 @@
 import sys
 import file_manager as fm
-from core_functions import create_map_core, load_fix_element_core, load_movil_element_core
+from core_functions import create_map_core, load_fix_element_core, load_movil_element_core, create_trip_core
 from direction import Direction
 
 
 def load_fix_element(data, fix_element_name, serialized_direction):
     # Deserializes the cmd argument and calls load_fix_element_core
     direction = deserialize_direction(serialized_direction)
-    success = load_fix_element_core(
-        fix_element_name, direction, data.static_loc_HT)
+    success = load_fix_element_core(data, 
+        fix_element_name, direction)
 
     if not success:
         print(f"A fix element named {fix_element_name} already exists")
@@ -17,8 +17,8 @@ def load_fix_element(data, fix_element_name, serialized_direction):
 
 def load_movil_element(data, movil_name, serialized_direction, price):
     direction = deserialize_direction(serialized_direction)
-    success = load_movil_element_core(
-        movil_name, direction, price, data.cars_HT, data.people_HT)
+    success = load_movil_element_core(data,
+        movil_name, direction, price )
 
     if not success:
         print(f"A Movil element named {movil_name} already exists")
@@ -28,19 +28,40 @@ def load_movil_element(data, movil_name, serialized_direction, price):
 
 
 def create_trip(data, person_name, second_value):
-
     # Contains a direction
     if second_value[0] == '<':
         direction = deserialize_direction(second_value)
-        print(person_name, direction)
-
     else:
         static_loc_name = second_value
-        print(person_name, static_loc_name)
+        static_loc = data.static_loc_HT[static_loc_name]
+        direction = static_loc.direction
+        
+    person = data.people_HT[person_name]
+    person.price = 0
+    sorted_cars = create_trip_core(data, person, direction)
+    
+    if len(sorted_cars) == 0:
+        print("Monto insuficiente o Ningun auto disponible")
+        return
+    
+    print("A que auto quieres llamar?")
+    for i, (car, price) in enumerate(sorted_cars):
+        print(f"{i + 1}. {car.name} con un precio de ${price}")
+    inp = input("Seleccione utilizando 1, 2 o 3 \n")
+    
+    selected_car = sorted_cars[int(inp) - 1][0]
+    selected_car_price = sorted_cars[int(inp) - 1][1]
+    
+    # Moves to the new direction
+    person.direction = direction
+    selected_car.direction = direction
 
+    # Updates person's money
+    person.price -= selected_car_price
+    
 
 def create_map(data, local_path):
-    data.main_map = create_map_core(local_path)
+    data.map = create_map_core(local_path)
     print("map created successfully")
 
 
@@ -69,7 +90,6 @@ def deserialize_direction(serialized_dir: str):
 
 if __name__ == '__main__':
     data = fm.initialization_data()
-    print(data.main_map)
     args = sys.argv
     func_name = args[1][1:]
 

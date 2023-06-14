@@ -28,7 +28,7 @@ class Map:
             self.distances[start_key] = {}
 
             # Heap used to get the min distance item
-            heap = Heap(self.vertices_count)
+            heap = Heap()
 
             # Initializes heap and nodes
             for node_key in self.vertices:
@@ -44,6 +44,9 @@ class Map:
 
                 (node_key, node_distance) = heap.pop()
 
+                if node_distance == float("inf"):
+                    break
+
                 self.distances[start_key][node_key] = node_distance
 
                 visited_keys.add(node_key)
@@ -57,6 +60,13 @@ class Map:
                         if ady_distance > node_distance + street_length:
                             heap.update_key(ady_key, node_distance + street_length)
 
+
+    def get_edges_distance(self, edge1_key, edge2_key):
+
+        if edge2_key not in self.distances[edge1_key]:
+            return None
+
+        return self.distances[edge1_key][edge2_key]
 
     def __repr__(self) -> str:
         return f"Map: \n {self.dict}"
@@ -78,7 +88,7 @@ class Map:
     def insert_directed(self, v0, v1, distance):
 
         # Insertion in directed graph
-        if self._exists_street(v0, v1):
+        if self.exists_street(v0, v1):
             raise Exception(
                 f"Adjacency <{v0}, {v1}> already established, use update instead")
 
@@ -103,12 +113,12 @@ class Map:
     def update_street(self, v0, v1, new_weight):
         # Updates the street weight
         # Note that it's in a single direction <v0, v1, new_weight>
-        if not self._exists_street(v0, v1):
+        if not self.exists_street(v0, v1):
             raise Exception(f"Trying to update inexistent edge <{v0}, {v1}>")
 
         self.dict[v0][v1].distance = new_weight
 
-    def _exists_street(self, v0, v1) -> bool:
+    def exists_street(self, v0, v1) -> bool:
 
         if v0 not in self.dict:
             return False

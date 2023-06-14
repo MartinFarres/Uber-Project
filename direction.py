@@ -8,3 +8,4 @@ class Direction:
 
     def __repr__(self) -> str:
         return f"Direction(<{self.edge1}, {self.d1}>, <{self.edge2}, {self.d2}>)"
+    

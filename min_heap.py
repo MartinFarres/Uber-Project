@@ -6,9 +6,8 @@ class Heap:
     Update and access use the key parameter. Performance is archieved
     by using an internal dictionary that holds the {key : index} pairs
     """
-    def __init__(self, size: int):
-        self._array = [None for _ in range(size)]
-        self._size = size
+    def __init__(self):
+        self._array = []
         self._insert_index = 0
         self._key_positions = {} # Used to store the position of the key in the heap
 
@@ -23,10 +22,8 @@ class Heap:
 
     def add(self, key, value):
         # Operation O(log(n))
-        if self._size == self._insert_index:
-            raise OverflowError(f"Overflow, array of size {self._size}")
-
         self._key_positions[key] = self._insert_index
+        self._array.append(None)
         self._array[self._insert_index] = (key, value)
         self._insert_index += 1
 
@@ -116,7 +113,7 @@ class Heap:
     
     def _has_left_child(self, index):
         index = self._left_child(index)
-        if index > self._size -1:
+        if index > len(self._array) -1:
             return False
         
         return self._array[index] != None
@@ -124,7 +121,7 @@ class Heap:
     def _has_right_child(self, index):
 
         index = self._right_child(index)
-        if index > self._size -1:
+        if index > len(self._array) -1:
             return False
         return self._array[index] != None
 
