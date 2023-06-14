@@ -27,7 +27,9 @@ def read_map_var(path: str):
                 else:
                     mapV.append(line[4:-2].split(">,<"))
     for i in range(0, len(mapV[1])):
-        mapV[1][i] = mapV[1][i].split(",")
+        values =  mapV[1][i].split(",")
+        mapV[1][i] = values[0], values[1], int(values[2])
+
     return mapV
 
 

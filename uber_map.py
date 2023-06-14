@@ -1,13 +1,4 @@
-class AdyProperties:
-    """
-    Stored in the adjacency list, contains all the data of the adyacency
-    """
-
-    def __init__(self, distance) -> None:
-        self.distance = distance
-
-    def __repr__(self) -> str:
-        return str(self.distance)
+from min_heap import Heap
 
 class Map:
 
@@ -17,8 +8,9 @@ class Map:
 
     def __init__(self, vertices: list, edges: list):
         # Vertices is a list containing all the vertices as [v0, v1, v2, ..., vn]
-        # eges is a list containing all the pairs of vertices and it's distance [[v0, v2, d0], [v4, v7, d1], ..., [v8, vn, dn]]
+        # edges is a list containing all the pairs of vertices and it's distance [[v0, v2, d0], [v4, v7, d1], ..., [v8, vn, dn]]
         self.dict = {}
+        self.distances = {}
         self.edges_count = 0
 
         for vert in vertices:
@@ -27,8 +19,43 @@ class Map:
         for (v0, v1, distance) in edges:
             self.insert_directed(v0, v1, distance)
 
+        self.precalculate_distances()
+
     def precalculate_distances(self):
-        pass
+
+        for start_key in self.vertices:
+            
+            self.distances[start_key] = {}
+
+            # Heap used to get the min distance item
+            heap = Heap(self.vertices_count)
+
+            # Initializes heap and nodes
+            for node_key in self.vertices:
+                heap.add(node_key, float("inf"))
+
+            visited_keys = set()
+
+            # Sets the d value of the starting node to 0
+            # this way the heap pops the start first
+            heap.update_key(start_key, 0)
+            
+            while len(heap):
+
+                (node_key, node_distance) = heap.pop()
+
+                self.distances[start_key][node_key] = node_distance
+
+                visited_keys.add(node_key)
+
+                for (ady_key, street_length) in self.adjacent_generator(node_key):
+
+                    if ady_key not in visited_keys:
+
+                        # Relax the adjacent
+                        ady_distance = heap.access(ady_key)
+                        if ady_distance > node_distance + street_length:
+                            heap.update_key(ady_key, node_distance + street_length)
 
 
     def __repr__(self) -> str:
@@ -42,7 +69,7 @@ class Map:
     def vertices(self):
         return self.dict.keys()
 
-    def node_adyacent_count(self, v):
+    def node_adjacent_count(self, v):
         if v not in self.dict:
             raise Exception(f"Trying to access inexistent node <{v}>")
 
@@ -51,9 +78,9 @@ class Map:
     def insert_directed(self, v0, v1, distance):
 
         # Insertion in directed graph
-        if self.exists_street(v0, v1):
+        if self._exists_street(v0, v1):
             raise Exception(
-                f"Adyacency <{v0}, {v1}> already established, use update instead")
+                f"Adjacency <{v0}, {v1}> already established, use update instead")
 
         self.edges_count += 1
 
@@ -65,34 +92,30 @@ class Map:
             self.insert_vertex(v1)
 
         # Establishes adjacency relationship
-        self.dict[v0][v1] = AdyProperties(distance)
-
-    def insert_bidirected(self, v0, v1, distance):
-        self.insert_directed(v0, v1, distance)
-        self.insert_directed(v1, v0, distance)
+        self.dict[v0][v1] = distance
 
     def insert_vertex(self, v):
         if v in self.dict:
-            raise Exception(f"Trying to add an existen vertex: <{v}>")
+            raise Exception(f"Trying to add an existent vertex: <{v}>")
 
         self.dict[v] = {}
 
     def update_street(self, v0, v1, new_weight):
         # Updates the street weight
         # Note that it's in a single direction <v0, v1, new_weight>
-        if not self.exists_street(v0, v1):
+        if not self._exists_street(v0, v1):
             raise Exception(f"Trying to update inexistent edge <{v0}, {v1}>")
 
         self.dict[v0][v1].distance = new_weight
 
-    def exists_street(self, v0, v1) -> bool:
+    def _exists_street(self, v0, v1) -> bool:
 
         if v0 not in self.dict:
             return False
 
         return v1 in self.dict[v0]
 
-    def adyacent_generator(self, v):
+    def adjacent_generator(self, v):
 
         if v not in self.dict:
             raise Exception(f"Trying to access inexistent node <{v}>")
@@ -100,45 +123,3 @@ class Map:
         for ady_key in self.dict[v].keys():
             # Yields the (key, distance) tuple
             yield (ady_key, self.dict[v][ady_key])
-
-    def street_generator(self):
-        # Generator that yields all the streets
-        for vertex in self.dict.keys():
-            for adyacent_key in self.dict[vertex].keys():
-                yield (vertex, adyacent_key)
-
-
-def load_grid_map(grid_size):
-    # Hardcoded Bidirected Grid 4x4 example. Where all north, south, west and east nodes are connected
-    # 0  1  2  3
-    # 4  5  6  7
-    # 8  9  10 11
-    # 12 13 14 15
-    street_length = 1
-    V = list(range(grid_size * grid_size))  # 100 vertices
-    map = Map(V, [])
-    for y in range(grid_size):
-
-        for x in range(grid_size):
-
-            # Current vertex
-            v = y * grid_size + x
-
-            # If the adyacent node is available (end of grid case consideration)
-            if x > 0:
-                left_node = y * grid_size + (x - 1)
-                map.insert_directed(v, left_node, street_length)
-
-            if x < grid_size - 0:
-                right_node = y * grid_size + (x + 1)
-                map.insert_directed(v, right_node, street_length)
-
-            if y > 0:
-                top_node = (y - 1) * grid_size + x
-                map.insert_directed(v, top_node, street_length)
-
-            if y < grid_size - 0:
-                bottom_node = (y + 1) * grid_size + x
-                map.insert_directed(v, bottom_node, street_length)
-
-    return map
