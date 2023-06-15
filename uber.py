@@ -11,8 +11,7 @@ def load_fix_element(data, fix_element_name, serialized_direction):
         fix_element_name, direction)
 
     if not success:
-        print(f"A fix element named {fix_element_name} already exists")
-    print(data.static_loc_HT)
+        print(f"Ya existe una ubicación fija llamada: {fix_element_name}")
 
 
 def load_movil_element(data, movil_name, serialized_direction, price):
@@ -21,10 +20,7 @@ def load_movil_element(data, movil_name, serialized_direction, price):
         movil_name, direction, price )
 
     if not success:
-        print(f"A Movil element named {movil_name} already exists")
-
-    print(data.people_HT)
-    print(data.cars_HT)
+        print(f"Ya existe una ubicación móvil llamada: {movil_name}")
 
 
 def create_trip(data, person_name, second_value):
@@ -37,7 +33,6 @@ def create_trip(data, person_name, second_value):
         direction = static_loc.direction
         
     person = data.people_HT[person_name]
-    person.price = 0
     sorted_cars = create_trip_core(data, person, direction)
     
     if len(sorted_cars) == 0:
@@ -47,8 +42,16 @@ def create_trip(data, person_name, second_value):
     print("A que auto quieres llamar?")
     for i, (car, price) in enumerate(sorted_cars):
         print(f"{i + 1}. {car.name} con un precio de ${price}")
-    inp = input("Seleccione utilizando 1, 2 o 3 \n")
+    inp = input("Seleccione utilizando números: ")
     
+    try:
+        if int(inp) > len(sorted_cars):
+            print("Viaje cancelado, opción inválida")
+            return
+    except:
+        print("Viaje cancelado, la opción debe ser un número entero")
+        return
+
     selected_car = sorted_cars[int(inp) - 1][0]
     selected_car_price = sorted_cars[int(inp) - 1][1]
     
